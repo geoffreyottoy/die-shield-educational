@@ -1,0 +1,22 @@
+#######################################
+# Syntax Coloring Map AnalogAccelermeter
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+DieShield	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+begin	KEYWORD2
+show	KEYWORD2
+attachShakeCallback	KEYWORD2	
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+NONE	LITERAL1
+ALL		LITERAL1

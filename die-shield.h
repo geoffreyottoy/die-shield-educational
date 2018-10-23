@@ -13,10 +13,8 @@
  *         File: die-shield.h
  *      Created: 2018-10-21
  *       Author: Geoffrey Ottoy
- *      Version: 1.0
  *
- *  Description: text
- *      some more text
+ *  Description: Header file for the DieShield class.
  *
  * MIT License
  * 
@@ -57,30 +55,31 @@
 #define DEFAULT_Y_AXIS_PIN	A1
 #define DEFAULT_Z_AXIS_PIN	A2
 
-#define NONE				0
-#define ALL					7
-#define ROTATED_OFFSET		6
+typedef void (*ShakeCallback_t)();
+
+typedef enum dieStatuses{DS_SUCCESS, DS_INIT_ERROR, DS_NOT_NULL, DS_SHAKING, DS_NOT_SHAKING} DieStatus_t;
+typedef enum dieValues{NONE=0, ONE=1, TWO=2, THREE=3, FOUR=4, FIVE=5, SIX=6, ALL=7} DieValue_t;
 
 class DieShield{
 	public:
-		 // Static access method.
 		DieShield();
 	
-		void begin();
+		DieStatus_t begin(void);
 	
-		void roll();
+		void roll(void);
 		void roll(int duration);
-		void show(uint8_t value);
+		void show(DieValue_t value);
 	
-		void detectShake();
+		DieStatus_t detectShake(void);
+		void readADXL335(void);
 	
-		void attachShakeCallback(void (* cb)());
+		DieStatus_t attachShakeCallback(ShakeCallback_t cb);
 		bool rolling;
 	
 	private:
-		void pinsInit();
-		void timerOneInit();
-		void updateLeds(uint8_t * leds);
+		void pinsInit(void);
+		void timerOneInit(void);
+		CircBufferStatus_t initBuffers(uint8_t size);
 		
 		CircBuffer x;
 		CircBuffer y;
@@ -91,12 +90,14 @@ class DieShield{
 		float prevZ;
 		
 		// pin numbers
-		uint8_t _clkPin;
-		uint8_t _led0Pin;
-		uint8_t _xAxisPin;
-		uint8_t _yAxisPin;
-		uint8_t _zAxisPin;
+		uint8_t clkPin;
+		uint8_t led0Pin;
+		uint8_t xAxisPin;
+		uint8_t yAxisPin;
+		uint8_t zAxisPin;
 		
 };
+
+extern DieShield Die;
 
 #endif /*__DIE_SHIELD_H__*/

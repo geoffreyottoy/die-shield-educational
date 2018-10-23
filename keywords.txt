@@ -11,12 +11,25 @@ DieShield	KEYWORD1
 #######################################
 # Methods and Functions (KEYWORD2)
 #######################################
-begin	KEYWORD2
-show	KEYWORD2
+begin		KEYWORD2
+show		KEYWORD2
+roll		KEYWORD2
 attachShakeCallback	KEYWORD2	
 
 #######################################
 # Constants (LITERAL1)
 #######################################
-NONE	LITERAL1
-ALL		LITERAL1
+NONE		LITERAL1
+ONE			LITERAL1
+TWO			LITERAL1
+THREE		LITERAL1
+FOUR		LITERAL1
+FIVE		LITERAL1
+SIX			LITERAL1
+ALL			LITERAL1
+
+DS_SUCCESS	LITERAL1
+DS_INIT_ERROR LITERAL1
+DS_NOT_NULL	LITERAL1
+DS_SHAKING	LITERAL1
+DS_NOT_SHAKING LITERAL1

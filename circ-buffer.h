@@ -46,20 +46,25 @@
 
 #define MAX_BUF_SIZE 128
 
-typedef enum circular_buf_statuses{
-    OK,
-    ERROR
-} circular_buf_status_t;
+typedef enum circBufferStatuses{
+    CB_SUCCESS,
+	CB_EMPTY,
+	CB_NOT_INITIALIZED,
+	CB_NOT_NULL,
+	CB_ARG_NULL,
+    CB_ERROR
+} CircBufferStatus_t;
 
 class CircBuffer{
 	public:
-		CircBuffer();
-		circular_buf_status_t init(uint8_t length);
-		void reset();
-		bool isEmpty();
+		CircBuffer(void);
+		CircBufferStatus_t init(uint8_t length);
+		void reset(void);
+		bool isEmpty(void);
 		uint8_t getFill();
-		circular_buf_status_t put(float data);
-		float getAverage();
+		CircBufferStatus_t put(float data);
+		CircBufferStatus_t get(float * data);
+		float getAverage(void);
 	
 	private:
 		float * buffer;

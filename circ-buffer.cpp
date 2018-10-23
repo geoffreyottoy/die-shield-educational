@@ -14,7 +14,8 @@
  *      Created: 2018-10-22
  *       Author: Geoffrey Ottoy
  *
- *  Description: Implementation of a circular buffer.
+ *  Description: Implementation of a circular buffer. The buffer contains floats
+ *               and also stores the average value.
  *
  * MIT License
  * 
@@ -41,20 +42,28 @@
 
 #include "circ-buffer.h"
 
-CircBuffer::CircBuffer(){}
+CircBuffer::CircBuffer(void){}
 
-/* Initialize a circular buffer (check size)
+/* Initialize a circular buffer
  */
-circular_buf_status_t CircBuffer::init(uint8_t length){
+CircBufferStatus_t CircBuffer::init(uint8_t length){
+	// check max length
     if(length > MAX_BUF_SIZE){
-        return ERROR;
+        return CB_ERROR;
     }
-	else{
-		buffer = (float*)malloc(sizeof(float)*length);
-		if(buffer == NULL){
-			return ERROR;
-		}
+	
+	// check if buffer has not yet been initalized
+	if(this->buffer != NULL){
+		return CB_NOT_NULL;
 	}
+
+	// allocate memory for the buffer
+	this->buffer = (float*)malloc(sizeof(float)*length);
+	if(this->buffer == NULL){
+		return CB_NOT_INITIALIZED;
+	}
+	
+	// initialize attributes
     this->length = length;
     this->head = 0;
     this->tail = 0;
@@ -62,12 +71,13 @@ circular_buf_status_t CircBuffer::init(uint8_t length){
 	this->sum = 0;
 	this->avg = 0;
     
-    return OK;
+    return CB_SUCCESS;
 }
 
-/* Reset a circular buffer
+/* Reset the buffer
  */ 
-void CircBuffer::reset(){
+void CircBuffer::reset(void){
+	// re-init attributes (memory is not cleared)
     this->head = 0;
 	this->tail = 0;
 	this->fill = 0;
@@ -75,60 +85,84 @@ void CircBuffer::reset(){
 	this->avg = 0;
 }
 
-/* Returns true when the buffer is empty
+/* Returns true when the buffer is empty, and false otherwise.
  */
-bool CircBuffer::isEmpty(){
+bool CircBuffer::isEmpty(void){
     // We define empty as head == tail
     return (this->head == this->tail);
 }
 
-uint8_t CircBuffer::getFill(){
+/* Returns the number of values stored in the buffer.
+ */
+uint8_t CircBuffer::getFill(void){
 	return this->fill;
 }
 
-float CircBuffer::getAverage(){
+/* Returns the average of all the values stored in the buffer.
+ */
+float CircBuffer::getAverage(void){
 	return this->avg;
 }
 
-/* Put a byte in the buffer
+/* Put a value in the buffer
  */
-circular_buf_status_t CircBuffer::put(float data){
+CircBufferStatus_t CircBuffer::put(float data){
+	// check if buffer is initalized
     if(this->buffer != NULL){
-		float lastTail = this->buffer[this->tail];
+		// store last value (in case it gets "pushed out")
+		float lastValue = this->buffer[this->tail];
 		
+		// store value at the head of the buffer
         this->buffer[this->head] = data;
+		// move head
         this->head = (this->head + 1) % this->length;
+		// increase number of elements
 		this->fill++;
+		// recompute total of all stored values
 		this->sum += data;
 		
-		// check if last byte has been overwritten
+		// check if last byte has been overwritten (pushed out)
         if(this->head == this->tail){
 			// move tail
             this->tail = (this->tail + 1) % this->length;
 			// correct fill
 			this->fill = this->length;
 			// correct sum
-			this->sum -= lastTail;
+			this->sum -= lastValue;
         }
 		
 		// update avg
+		if(this->fill == 0){
+			return CB_ERROR;
+		}
 		this->avg = (this->sum / this->fill);
-
-        return OK;
+		
+        return CB_SUCCESS;
     }
     
-    return ERROR;
+    return CB_NOT_INITIALIZED;
 }
 
-/* Get a byte from the buffer (don't need this)
+/* Get a value from the buffer
  */
-/*circular_buf_status_t circular_buf_get(circular_buf_t * cbuf, float * data){
-    if(cbuf && data && !circular_buf_empty(*cbuf)){
-        *data = cbuf->buffer[cbuf->tail];
-        cbuf->tail = (cbuf->tail + 1) % cbuf->length;
+CircBufferStatus_t CircBuffer::get(float * data){
+	// check for NULL pointer
+	if(data == NULL){
+		return CB_ARG_NULL;
+	}
+	// check if buffer is initalized
+	if(this->buffer == NULL){
+		return CB_NOT_INITIALIZED;
+	}
+	// check if buffer is empty
+    if(!this->isEmpty()){
+		// return last value in the buffer
+        *data = this->buffer[this->tail];
+		// move the tail
+        this->tail = (this->tail + 1) % this->length;
 
-        return OK;
+        return CB_SUCCESS;
     }
     
-    return ERROR;
-}*/
+    return CB_EMPTY;
+}

@@ -67,7 +67,7 @@ class DieShield{
 		DieStatus_t begin(void);
 	
 		void roll(void);
-		void roll(int duration);
+		void roll(int nrShakes);
 		void show(DieValue_t value);
 	
 		DieStatus_t detectShake(void);

@@ -5,8 +5,8 @@
 #######################################
 # Datatypes (KEYWORD1)
 #######################################
-
 DieShield	KEYWORD1
+Die			KEYWORD1
 
 #######################################
 # Methods and Functions (KEYWORD2)
@@ -29,7 +29,9 @@ SIX			LITERAL1
 ALL			LITERAL1
 
 DS_SUCCESS	LITERAL1
-DS_INIT_ERROR LITERAL1
+DS_INIT_ERROR	LITERAL1
 DS_NOT_NULL	LITERAL1
 DS_SHAKING	LITERAL1
-DS_NOT_SHAKING LITERAL1
+DS_NOT_SHAKING	LITERAL1
+
+ShakeCallback_t	LITERAL1

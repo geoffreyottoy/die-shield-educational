@@ -46,7 +46,7 @@
 DieShield Die;              // preinstatiate
 
 volatile int sampleCtr;
-volatile int rollingCounter;
+//volatile int rollingCounter;
 
 static bool dsInitialized = false;
 
@@ -65,9 +65,9 @@ uint8_t ledLUT[8][7]={
 
 ISR(TIMER1_COMPA_vect){
 	// for Rolling animation
-	if(Die.rolling){
+	/*if(Die.rolling){
 		rollingCounter++;
-	}
+	}*/
 	
 	// Sample ADXL335
 	sampleCtr++;
@@ -135,38 +135,37 @@ void DieShield::roll(){
 
 /* Roll animation
  */
-void DieShield::roll(int duration){
-	this->rolling = true;
-	int scaledDuration = duration * 100;
-	int increase = 20;
-	while(rollingCounter < scaledDuration){
-		if(rollingCounter == increase){
-			if(increase < 300){
-				increase += 20;
-			}else{
-				if(increase < 600){
-					increase += 50;
-				}
-				else{
-					increase += 100;
-				}
-			}
+void DieShield::roll(int nrShakes){
+	int i;
+	int rem = (nrShakes-3)*4;
+	if(nrShakes>3){
+		for(i=0;i<rem;i++){
 			this->roll();
+			delay(100);
 		}
 	}
-	rollingCounter = 0;
-	this->rolling = false;
+	for(i=0;i<4;i++){
+		this->roll();
+		delay(200);
+	}
+	this->roll();
+	delay(300);
+	this->roll();
+	delay(300);
+	this->roll();
+	delay(600);
+	
 	// Done rolling show final value
 	DieValue_t value = (DieValue_t) random(1,7);
-	show(value);
-	delay(250);
-	show(NONE);
-	delay(600);
-	show(value);
-	delay(250);
-	show(NONE);
-	delay(250);
-	show(value);
+	this->show(value);
+	delay(1000);
+	this->show(NONE);
+	delay(400);
+	this->show(value);
+	delay(200);
+	this->show(NONE);
+	delay(200);
+	this->show(value);
 }
 
 void DieShield::show(DieValue_t value){

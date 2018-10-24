@@ -41,58 +41,90 @@
  
 #include "die-shield.h"
 
-#define ROLLING_TRESHOLD 500
+#define ROLLING_TRESHOLD 500 // ms
 
-#define BUTTON_S1 2
+#define BUTTON_S1 2 // D2 (INT0)
 
 bool buttonPressed = false;
+bool newRoll = false;
 bool dieShaking = false;
 bool dieRolling = false;
 unsigned long prevShakeTime = 0;  
 unsigned int shakeCounter = 0;
 
+/* ISR for Button S1 */
 void s1Pressed(void){
-  buttonPressed = true;
+  if(!newRoll){ // ignore button press when roll cycle has started
+    buttonPressed = true;
+  }
 }
 
-static void iAmShaking(void){
-  unsigned long shakeTime = millis();
-  shakeCounter++;
-  
-  if(shakeTime-prevShakeTime > ROLLING_TRESHOLD){
-    dieRolling = true;
-  }
-  else{
+/* Callback for the Die shake event */
+ShakeCallback_t iAmShaking(void){
+  if(!dieRolling){ // ignore shake when roll animation has started
     dieShaking = true;
   }
-  
-  prevShakeTime = shakeTime;
 }
 
 void setup(){
+  Serial.begin(115200);
+  // Initialize Button S1
   pinMode(BUTTON_S1, INPUT);
   attachInterrupt(digitalPinToInterrupt(BUTTON_S1), s1Pressed, FALLING);
   
-  // put your setup code here, to run once:
+  // Initialize Die Shield for callback-based operation
   Die.attachShakeCallback(&iAmShaking);
   Die.begin();
 }
 
 void loop(){
+  // take time stamp
+  unsigned long shakeTime = millis();
+
+  // shake event has been called
   if(dieShaking){
+    if(shakeCounter==0){ // first shake (of the roll cylce)
+      // show a new value
+      Die.roll();
+    }
+    else{ // another shake
+      // start roll cycle
+      newRoll = true; 
+      // show a new value
+      Die.roll();
+    }
+     // count the number of shakes
+    shakeCounter++;
+
+    // store the time of this shake
+    prevShakeTime = shakeTime;
+    
+    // store the time of this shake
     dieShaking = false;
-	Die.roll();
   }
-  
-  if(dieRolling){
-    dieRolling = false;
-	shakeCounter = 0;
-	Die.roll(shakeCounter);
+
+  // roll cycle has started
+  if(newRoll){
+    // detect if shaking has stopped (die is released)
+    if(shakeTime-prevShakeTime > ROLLING_TRESHOLD){
+       // to ignore new shakes while die is rolling
+      dieRolling = true;
+       // start roll animation (the more shakes have been counted, the longer it will roll)
+      Die.roll(shakeCounter);
+      
+      // end roll cycle
+      shakeCounter = 0; 
+      newRoll = false;
+      dieRolling = false;
+    }
   }
-  
+
+  // button has been pressed (start roll animation without shaking)
   if(buttonPressed){
-    buttonPressed = false;
+     // start roll animation
     Die.roll(10);
+    // button press has been handled
+    buttonPressed = false;
   }
   
 }

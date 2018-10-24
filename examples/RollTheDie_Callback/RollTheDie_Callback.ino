@@ -93,7 +93,7 @@ void loop(){
       // show a new value
       Die.roll();
     }
-     // count the number of shakes
+    // count the number of shakes
     shakeCounter++;
 
     // store the time of this shake

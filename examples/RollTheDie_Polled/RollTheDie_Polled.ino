@@ -43,10 +43,10 @@
 
 #define POLL_INTERVAL 250
 
-#define S1 2
+#define BUTTON_S1 2
 
 bool buttonPressed = false;
-bool dieRolled = false;
+bool dieShake = false;
 unsigned long previousMillis = 0;  
 unsigned int noRollCounter = 0;
 int rollDuration = 0;
@@ -58,15 +58,16 @@ void s1Pressed(void){
   buttonPressed = true;
 }
 
-static void shakeStuff(void){
-  dieRolled = true;
+static void iAmShaking(void){
+  dieShake = true;
 }
 
 void setup(){
-  pinMode(S1, INPUT);
+  pinMode(BUTTON_S1, INPUT);
+  attachInterrupt(digitalPinToInterrupt(BUTTON_S1), s1Pressed, FALLING);
   
   // put your setup code here, to run once:
-  Die.attachShakeCallback(&shakeStuff);
+  Die.attachShakeCallback(&iAmShaking);
   Die.begin();
 }
 
@@ -82,11 +83,11 @@ void loop(){
     } break;
     
     case CHECK_DIE_ROLL:{
-      if(dieRolled){
+      if(dieShake){
         noRollCounter = 0;
         rollDuration++;
-        dieRolled = false;
-        die.roll();
+        dieShake = false;
+        Die.roll();
       }
       else{
         if(noRollCounter == 1){
@@ -102,7 +103,7 @@ void loop(){
     case ANIMATE_ROLL:{
       // roll animatition
       if(rollDuration>1){
-        die.roll(rollDuration);
+        Die.roll(rollDuration);
       }
       rollDuration = 0;
       appState = UPDATE_TIME;
@@ -114,8 +115,8 @@ void loop(){
   }
 
   if(buttonPressed){
-    die.roll(10);
-    // reset counters
+    Die.roll(10);
+    // reset counters?
     appState = UPDATE_TIME;
     buttonPressed = false;
   }

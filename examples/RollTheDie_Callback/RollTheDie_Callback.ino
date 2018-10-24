@@ -41,25 +41,32 @@
  
 #include "die-shield.h"
 
-#define POLL_INTERVAL 250
+#define ROLLING_TRESHOLD 500
 
 #define BUTTON_S1 2
 
 bool buttonPressed = false;
-bool dieShake = false;
-unsigned long previousMillis = 0;  
-unsigned int noRollCounter = 0;
-int rollDuration = 0;
-
-typedef enum appStates{UPDATE_TIME, CHECK_DIE_ROLL, ANIMATE_ROLL} AppState_t;
-AppState_t appState = UPDATE_TIME;
+bool dieShaking = false;
+bool dieRolling = false;
+unsigned long prevShakeTime = 0;  
+unsigned int shakeCounter = 0;
 
 void s1Pressed(void){
   buttonPressed = true;
 }
 
 static void iAmShaking(void){
-  dieShake = true;
+  unsigned long shakeTime = millis();
+  shakeCounter++;
+  
+  if(shakeTime-prevShakeTime > ROLLING_TRESHOLD){
+    dieRolling = true;
+  }
+  else{
+    dieShaking = true;
+  }
+  
+  prevShakeTime = shakeTime;
 }
 
 void setup(){
@@ -72,53 +79,20 @@ void setup(){
 }
 
 void loop(){
-  
-  switch(appState){
-    case UPDATE_TIME:{
-       unsigned long currentMillis = millis();
-       if(currentMillis - previousMillis >= POLL_INTERVAL){
-        previousMillis = currentMillis;
-        appState = CHECK_DIE_ROLL;
-       }
-    } break;
-    
-    case CHECK_DIE_ROLL:{
-      if(dieShake){
-        noRollCounter = 0;
-        rollDuration++;
-        dieShake = false;
-        Die.roll();
-      }
-      else{
-        if(noRollCounter == 1){
-          appState = ANIMATE_ROLL;
-        }
-        else{
-          noRollCounter++;
-          appState = UPDATE_TIME;
-        }
-      }
-    } break;
-
-    case ANIMATE_ROLL:{
-      // roll animatition
-      if(rollDuration>1){
-        Die.roll(rollDuration);
-      }
-      rollDuration = 0;
-      appState = UPDATE_TIME;
-    } break;
-
-    default:{
-      appState = UPDATE_TIME;
-    } break;
+  if(dieShaking){
+    dieShaking = false;
+	Die.roll();
   }
-
+  
+  if(dieRolling){
+    dieRolling = false;
+	shakeCounter = 0;
+	Die.roll(shakeCounter);
+  }
+  
   if(buttonPressed){
-    Die.roll(10);
-    // reset counters?
-    appState = UPDATE_TIME;
     buttonPressed = false;
+    Die.roll(10);
   }
   
 }

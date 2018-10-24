@@ -129,7 +129,7 @@ DieStatus_t DieShield::begin(){
 /* Generate random value and show
  */
 void DieShield::roll(){
-	uint8_t value = random(1,7);
+	DieValue_t value = (DieValue_t) random(1,7);
 	this->show(value);
 }
 
@@ -157,7 +157,7 @@ void DieShield::roll(int duration){
 	rollingCounter = 0;
 	this->rolling = false;
 	// Done rolling show final value
-	uint8_t value = random(1,7);
+	DieValue_t value = (DieValue_t) random(1,7);
 	show(value);
 	delay(250);
 	show(NONE);

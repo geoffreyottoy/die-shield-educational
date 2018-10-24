@@ -64,21 +64,21 @@ CircBufferStatus_t CircBuffer::init(uint8_t length){
 	}
 	
 	// initialize attributes
-    this->length = length;
-    this->head = 0;
-    this->tail = 0;
+	this->length = length;
+	this->head = 0;
+	this->tail = 0;
 	this->fill = 0;
 	this->sum = 0;
 	this->avg = 0;
-    
-    return CB_SUCCESS;
+
+	return CB_SUCCESS;
 }
 
 /* Reset the buffer
  */ 
 void CircBuffer::reset(void){
 	// re-init attributes (memory is not cleared)
-    this->head = 0;
+	this->head = 0;
 	this->tail = 0;
 	this->fill = 0;
 	this->sum = 0;
@@ -88,8 +88,8 @@ void CircBuffer::reset(void){
 /* Returns true when the buffer is empty, and false otherwise.
  */
 bool CircBuffer::isEmpty(void){
-    // We define empty as head == tail
-    return (this->head == this->tail);
+	// We define empty as head == tail
+	return (this->head == this->tail);
 }
 
 /* Returns the number of values stored in the buffer.
@@ -108,39 +108,39 @@ float CircBuffer::getAverage(void){
  */
 CircBufferStatus_t CircBuffer::put(float data){
 	// check if buffer is initalized
-    if(this->buffer != NULL){
+	if(this->buffer != NULL){
 		// store last value (in case it gets "pushed out")
 		float lastValue = this->buffer[this->tail];
-		
+
 		// store value at the head of the buffer
-        this->buffer[this->head] = data;
+		this->buffer[this->head] = data;
 		// move head
-        this->head = (this->head + 1) % this->length;
+		this->head = (this->head + 1) % this->length;
 		// increase number of elements
 		this->fill++;
 		// recompute total of all stored values
 		this->sum += data;
-		
+
 		// check if last byte has been overwritten (pushed out)
-        if(this->head == this->tail){
+		if(this->head == this->tail){
 			// move tail
-            this->tail = (this->tail + 1) % this->length;
+			this->tail = (this->tail + 1) % this->length;
 			// correct fill
 			this->fill = this->length;
 			// correct sum
 			this->sum -= lastValue;
-        }
-		
+		}
+
 		// update avg
 		if(this->fill == 0){
 			return CB_ERROR;
 		}
 		this->avg = (this->sum / this->fill);
-		
-        return CB_SUCCESS;
-    }
-    
-    return CB_NOT_INITIALIZED;
+
+		return CB_SUCCESS;
+	}
+
+	return CB_NOT_INITIALIZED;
 }
 
 /* Get a value from the buffer
@@ -155,14 +155,14 @@ CircBufferStatus_t CircBuffer::get(float * data){
 		return CB_NOT_INITIALIZED;
 	}
 	// check if buffer is empty
-    if(!this->isEmpty()){
+	if(!this->isEmpty()){
 		// return last value in the buffer
-        *data = this->buffer[this->tail];
+		*data = this->buffer[this->tail];
 		// move the tail
-        this->tail = (this->tail + 1) % this->length;
+		this->tail = (this->tail + 1) % this->length;
 
-        return CB_SUCCESS;
-    }
-    
-    return CB_EMPTY;
+		return CB_SUCCESS;
+	}
+
+	return CB_EMPTY;
 }

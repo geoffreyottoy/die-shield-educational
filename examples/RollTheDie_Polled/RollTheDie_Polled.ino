@@ -10,11 +10,11 @@
  *  Gebroeders De Smetstraat 1,
  *  B-9000 Gent, Belgium
  *
- *         File: RollTheDie_Callback.ino
- *      Created: 2018-10-22
+ *         File: RollTheDie.ino
+ *      Created: 2018-10-24
  *       Author: Geoffrey Ottoy
  *
- *  Description: Callback-based operation of DIE SHIELD
+ *  Description: Polled operation of DIE SHIELD
  *
  * MIT License
  * 
@@ -43,10 +43,10 @@
 
 #define POLL_INTERVAL 250
 
-#define BUTTON_S1 2
+#define S1 2
 
 bool buttonPressed = false;
-bool dieShake = false;
+bool dieRolled = false;
 unsigned long previousMillis = 0;  
 unsigned int noRollCounter = 0;
 int rollDuration = 0;
@@ -58,16 +58,15 @@ void s1Pressed(void){
   buttonPressed = true;
 }
 
-static void iAmShaking(void){
-  dieShake = true;
+static void shakeStuff(void){
+  dieRolled = true;
 }
 
 void setup(){
-  pinMode(BUTTON_S1, INPUT);
-  attachInterrupt(digitalPinToInterrupt(BUTTON_S1), s1Pressed, FALLING);
+  pinMode(S1, INPUT);
   
   // put your setup code here, to run once:
-  Die.attachShakeCallback(&iAmShaking);
+  Die.attachShakeCallback(&shakeStuff);
   Die.begin();
 }
 
@@ -83,11 +82,11 @@ void loop(){
     } break;
     
     case CHECK_DIE_ROLL:{
-      if(dieShake){
+      if(dieRolled){
         noRollCounter = 0;
         rollDuration++;
-        dieShake = false;
-        Die.roll();
+        dieRolled = false;
+        die.roll();
       }
       else{
         if(noRollCounter == 1){
@@ -103,7 +102,7 @@ void loop(){
     case ANIMATE_ROLL:{
       // roll animatition
       if(rollDuration>1){
-        Die.roll(rollDuration);
+        die.roll(rollDuration);
       }
       rollDuration = 0;
       appState = UPDATE_TIME;
@@ -115,8 +114,8 @@ void loop(){
   }
 
   if(buttonPressed){
-    Die.roll(10);
-    // reset counters?
+    die.roll(10);
+    // reset counters
     appState = UPDATE_TIME;
     buttonPressed = false;
   }

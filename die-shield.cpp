@@ -83,8 +83,12 @@ ISR(TIMER1_COMPA_vect){
 	
 }
 
+/*****************************************************************************
+ * Public methods                                                           *
+ *****************************************************************************/
+
 // Constructor (set pins)
-DieShield::DieShield(){	
+DieShield::DieShield(){
 	// Set pin numbers
 	this->clkPin = DEFAULT_CLK_PIN;
 	this->led0Pin = DEFAULT_LED0_PIN;
@@ -112,6 +116,8 @@ DieStatus_t DieShield::begin(){
 	// Initialize attributes
 	sampleCtr=0;
 	this->rolling = false;
+	this->sensitivity = DEFAULT_SENSITIVITY;
+	
 	// Initialize random generator
 	randomSeed(analogRead(A5));
 	// Initialize measurement buffers
@@ -186,15 +192,15 @@ DieStatus_t DieShield::detectShake(void){
 	float yAvg = this->y.getAverage();
 	float zAvg = this->z.getAverage();
 	// detect shake
-	if(abs(xAvg - this->prevX) > SHAKE_SENSITIVITY){
+	if(abs(xAvg - this->prevX) > this->sensitivity){
 		// shake detected
 		shakeDetected = true;
 	}
-	if(abs(yAvg - this->prevY) > SHAKE_SENSITIVITY){
+	if(abs(yAvg - this->prevY) > this->sensitivity){
 		// shake detected
 		shakeDetected = true;
 	}
-	if(abs(zAvg - this->prevZ) > SHAKE_SENSITIVITY){
+	if(abs(zAvg - this->prevZ) > this->sensitivity){
 		// shake detected
 		shakeDetected = true;
 	}
@@ -208,6 +214,14 @@ DieStatus_t DieShield::detectShake(void){
 	}
 	
 	return DS_NOT_SHAKING;
+}
+
+void DieShield::setSensitivity(float s){
+	this->sensitivity = s;
+}
+
+float DieShield::getSensitivity(){
+	return this->sensitivity;
 }
 
 /*****************************************************************************

@@ -67,7 +67,6 @@ ShakeCallback_t iAmShaking(void){
 }
 
 void setup(){
-  Serial.begin(115200);
   // Initialize Button S1
   pinMode(BUTTON_S1, INPUT);
   attachInterrupt(digitalPinToInterrupt(BUTTON_S1), s1Pressed, FALLING);
@@ -107,9 +106,9 @@ void loop(){
   if(newRoll){
     // detect if shaking has stopped (die is released)
     if(shakeTime-prevShakeTime > ROLLING_TRESHOLD){
-       // to ignore new shakes while die is rolling
+      // to ignore new shakes while die is rolling
       dieRolling = true;
-       // start roll animation (the more shakes have been counted, the longer it will roll)
+      // start roll animation (the more shakes have been counted, the longer it will roll)
       Die.roll(shakeCounter);
       
       // end roll cycle

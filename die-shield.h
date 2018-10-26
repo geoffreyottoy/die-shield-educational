@@ -45,7 +45,7 @@
 #include <Arduino.h>
 #include "circ-buffer.h"
 
-#define SHAKE_SENSITIVITY	0.25
+#define DEFAULT_SENSITIVITY	0.25
 #define BUFFER_SIZE			20
 
 #define DEFAULT_CLK_PIN		7
@@ -72,6 +72,8 @@ class DieShield{
 	
 		DieStatus_t detectShake(void);
 		void readADXL335(void);
+		void setSensitivity(float s);
+		float getSensitivity();
 	
 		DieStatus_t attachShakeCallback(ShakeCallback_t cb);
 		bool rolling;
@@ -88,6 +90,8 @@ class DieShield{
 		float prevX;
 		float prevY;
 		float prevZ;
+		
+		float sensitivity;
 		
 		// pin numbers
 		uint8_t clkPin;

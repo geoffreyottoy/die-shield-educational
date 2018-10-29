@@ -48,9 +48,9 @@ CircBuffer::CircBuffer(void){}
  */
 CircBufferStatus_t CircBuffer::init(uint8_t length){
 	// check max length
-    if(length > MAX_BUF_SIZE){
-        return CB_ERROR;
-    }
+	if(length > MAX_BUF_SIZE){
+		return CB_ERROR;
+	}
 	
 	// check if buffer has not yet been initalized
 	if(this->buffer != NULL){
@@ -68,7 +68,6 @@ CircBufferStatus_t CircBuffer::init(uint8_t length){
 	this->head = 0;
 	this->tail = 0;
 	this->fill = 0;
-	this->sum = 0;
 	this->avg = 0;
 
 	return CB_SUCCESS;
@@ -81,7 +80,6 @@ void CircBuffer::reset(void){
 	this->head = 0;
 	this->tail = 0;
 	this->fill = 0;
-	this->sum = 0;
 	this->avg = 0;
 }
 
@@ -107,6 +105,8 @@ float CircBuffer::getAverage(void){
 /* Put a value in the buffer
  */
 CircBufferStatus_t CircBuffer::put(float data){
+	// TODO: add computation of the buffer average
+	
 	// check if buffer is initalized
 	if(this->buffer != NULL){
 		// store last value (in case it gets "pushed out")
@@ -118,8 +118,6 @@ CircBufferStatus_t CircBuffer::put(float data){
 		this->head = (this->head + 1) % this->length;
 		// increase number of elements
 		this->fill++;
-		// recompute total of all stored values
-		this->sum += data;
 
 		// check if last byte has been overwritten (pushed out)
 		if(this->head == this->tail){
@@ -127,15 +125,7 @@ CircBufferStatus_t CircBuffer::put(float data){
 			this->tail = (this->tail + 1) % this->length;
 			// correct fill
 			this->fill = this->length;
-			// correct sum
-			this->sum -= lastValue;
 		}
-
-		// update avg
-		if(this->fill == 0){
-			return CB_ERROR;
-		}
-		this->avg = (this->sum / this->fill);
 
 		return CB_SUCCESS;
 	}

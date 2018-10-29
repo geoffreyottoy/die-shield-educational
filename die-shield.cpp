@@ -43,32 +43,41 @@
 #include <Arduino.h>
 #include "die-shield.h"
 
-DieShield Die;              // preinstatiate
+/*****************************************************************************
+ * Global symbols                                                            *
+ *****************************************************************************/
 
-volatile int sampleCtr;
-//volatile int rollingCounter;
-
+// preinstatiate
+DieShield Die;
 static bool dsInitialized = false;
 
-static ShakeCallback_t scb = NULL;
+volatile int sampleCtr;
+volatile bool shaking;
+static ShakeCallback_t scb;
 
+// Convert value to the die display format.
 uint8_t ledLUT[8][7]={
-    {0,0,0,0,0,0,0}, // NONE
-    {0,0,0,0,0,0,1}, // 1
-    {1,0,0,1,0,0,0}, // 2
-    {1,0,0,1,0,0,1}, // 3
-    {1,0,1,1,0,1,0}, // 4
-    {1,0,1,1,0,1,1}, // 5
-    {1,1,1,1,1,1,0}, // 6
-    {1,1,1,1,1,1,1}, // ALL
+// Position on the die shield:	
+//
+//         4       3
+//
+//         5   0   2
+//
+//         6       1	
+//
+// LED 6 5 4 3 2 1 0 	
+      {0,0,0,0,0,0,0}, // NONE
+      {0,0,0,0,0,0,1}, // ONE
+      {1,0,0,1,0,0,0}, // TWO
+      {1,0,0,1,0,0,1}, // THREE
+      {1,0,1,1,0,1,0}, // FOUR
+      {1,0,1,1,0,1,1}, // FIVE
+      {1,1,1,1,1,1,0}, // SIX
+      {1,1,1,1,1,1,1}, // ALL
 };
 
+// Timer 1 compare match Interrupt Service Routine (fires every 5 ms).
 ISR(TIMER1_COMPA_vect){
-	// for Rolling animation
-	/*if(Die.rolling){
-		rollingCounter++;
-	}*/
-	
 	// Sample ADXL335
 	sampleCtr++;
 	Die.readADXL335();
@@ -77,17 +86,24 @@ ISR(TIMER1_COMPA_vect){
 	if(sampleCtr==BUFFER_SIZE){
 		sampleCtr=0;
 		if(Die.detectShake() == DS_SHAKING){
-			scb();
+			shaking = true;
+			if(scb != NULL){
+				scb();
+			}
+		}
+		else{
+			shaking = false;
 		}
 	}
 	
 }
 
 /*****************************************************************************
- * Public methods                                                           *
+ * Public methods                                                            *
  *****************************************************************************/
 
-// Constructor (set pins)
+/* Constructor (set pin numbers)
+ */
 DieShield::DieShield(){
 	// Set pin numbers
 	this->clkPin = DEFAULT_CLK_PIN;
@@ -97,39 +113,22 @@ DieShield::DieShield(){
 	this->zAxisPin = DEFAULT_Z_AXIS_PIN;
 }
 
-DieStatus_t DieShield::attachShakeCallback(ShakeCallback_t cb){
-	if(scb != NULL){
-		return DS_NOT_NULL;
-	}
-	scb = cb;
-	
-	return DS_SUCCESS;
+/* Begin operation of the die and do not assign a shake callback.
+ */
+DieStatus_t DieShield::begin(){
+	return this->init(NULL);
 }
 
-DieStatus_t DieShield::begin(){
-	// Avoid more than one instance
-	if(dsInitialized){
-		return DS_INIT_ERROR;
-	}
-	dsInitialized = true;
-	
-	// Initialize attributes
-	sampleCtr=0;
-	this->rolling = false;
-	this->sensitivity = DEFAULT_SENSITIVITY;
-	
-	// Initialize random generator
-	randomSeed(analogRead(A5));
-	// Initialize measurement buffers
-	if(this->initBuffers(BUFFER_SIZE) != CB_SUCCESS){
-		return DS_INIT_ERROR;
-	}
-	// Initialize pins
-    this->pinsInit();
-	// Initialize timer 1
-	this->timerOneInit();
-	
-	return DS_SUCCESS;
+/* Begin operation of the die and assign a shake callback.
+ */
+DieStatus_t DieShield::begin(ShakeCallback_t cb){
+	return this->init(cb);
+}
+
+/* Return if a shake has been detected. 
+ */
+bool DieShield::isShaking(){
+	return shaking;
 }
 
 /* Generate random value and show
@@ -174,17 +173,16 @@ void DieShield::roll(int nrShakes){
 	this->show(value);
 }
 
+/* Show a value on the LEDs of the die shield.
+ */
 void DieShield::show(DieValue_t value){
-	uint8_t * leds = ledLUT[value];
-	uint8_t i;
-	for(i=0; i<6; i++){
-		digitalWrite(this->led0Pin, leds[i]);
-		digitalWrite(this->clkPin, HIGH);
-		digitalWrite(this->clkPin, LOW);
-	}
-	digitalWrite(this->led0Pin, leds[6]);
+	// TODO: display value using the shield's LEDs
 }
 
+/* Detect a shake
+ *  If the average acceleration (in any direction) is higher than the previous average +/- a given
+ *  threshold, then a shake is detected.
+ */
 DieStatus_t DieShield::detectShake(void){
 	bool shakeDetected = false;
 
@@ -208,18 +206,22 @@ DieStatus_t DieShield::detectShake(void){
 	this->prevX = xAvg;
 	this->prevY = yAvg;
 	this->prevZ = zAvg;
-	// execute callback
-	if(shakeDetected){ // callback
+	// return shaking / not shaking
+	if(shakeDetected){
 		return DS_SHAKING;
 	}
 	
 	return DS_NOT_SHAKING;
 }
 
+/* Set the "shake detect" sensitivity
+ */
 void DieShield::setSensitivity(float s){
 	this->sensitivity = s;
 }
 
+/* Read the "shake detect" sensitivity
+ */
 float DieShield::getSensitivity(){
 	return this->sensitivity;
 }
@@ -228,6 +230,49 @@ float DieShield::getSensitivity(){
  * Private methods                                                           *
  *****************************************************************************/
 
+/* Initialize die-shield operation:
+ *  set shake callback
+ *  initialize sampling buffers
+ *  initialize pins
+ *  initialize Timer1 to 200 Hz
+ */
+DieStatus_t DieShield::init(ShakeCallback_t cb){
+	// Avoid more than one instance
+	if(dsInitialized){
+		return DS_INIT_ERROR;
+	}
+	dsInitialized = true;
+	
+	// Attach callback
+	// check if callback has not been set previously
+	if(scb != NULL){
+		return DS_NOT_NULL;
+	}
+	// set callback
+	scb = cb;
+	
+	// Initialize attributes
+	sampleCtr=0;
+	shaking = false;
+	//this->rolling = false;
+	this->sensitivity = DEFAULT_SENSITIVITY;
+	
+	// Initialize random generator
+	randomSeed(analogRead(A5));
+	// Initialize measurement buffers
+	if(this->initBuffers(BUFFER_SIZE) != CB_SUCCESS){
+		return DS_INIT_ERROR;
+	}
+	// Initialize pins
+    this->pinsInit();
+	// Initialize timer 1
+	this->timerOneInit();
+	
+	return DS_SUCCESS;
+}
+
+/* Initialize pins used by the die-shield
+ */
 void DieShield::pinsInit(){
 	// ADXL335 (analog) inputs
 	pinMode(this->xAxisPin, INPUT);
@@ -242,6 +287,8 @@ void DieShield::pinsInit(){
 	digitalWrite(this->clkPin, LOW);
 }
 
+/* Initialize Timer1 (compare interrupt every 5 ms)
+ */
 void DieShield::timerOneInit(){
 #if defined(__AVR__)
 	cli();
@@ -264,6 +311,8 @@ void DieShield::timerOneInit(){
 #endif
 }
 
+/* Initialize circular buffers for storing ADXL335 measurements
+ */
 CircBufferStatus_t DieShield::initBuffers(uint8_t size){
 	CircBufferStatus_t status = this->x.init(size);
 	if(status != CB_SUCCESS){
@@ -280,6 +329,8 @@ CircBufferStatus_t DieShield::initBuffers(uint8_t size){
 	return CB_SUCCESS;
 }
 
+/* Read x,y and z acceleration (analog voltage) from ADXL335 and store in circular buffer.
+ */
 void DieShield::readADXL335(void){
 	// Read ADXL335 voltages
 	float x_val = (float)5*analogRead(this->xAxisPin)/1024;

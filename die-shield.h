@@ -45,15 +45,15 @@
 #include <Arduino.h>
 #include "circ-buffer.h"
 
-#define DEFAULT_SENSITIVITY	0.25
-#define BUFFER_SIZE			20
+#define DEFAULT_SENSITIVITY 0.25
+#define BUFFER_SIZE         20
 
-#define DEFAULT_CLK_PIN		7
-#define DEFAULT_LED0_PIN	4
+#define DEFAULT_CLK_PIN     7
+#define DEFAULT_LED0_PIN    4
 
 #define DEFAULT_X_AXIS_PIN  A0
-#define DEFAULT_Y_AXIS_PIN	A1
-#define DEFAULT_Z_AXIS_PIN	A2
+#define DEFAULT_Y_AXIS_PIN  A1
+#define DEFAULT_Z_AXIS_PIN  A2
 
 typedef void (*ShakeCallback_t)();
 
@@ -65,20 +65,22 @@ class DieShield{
 		DieShield();
 	
 		DieStatus_t begin(void);
-	
+		DieStatus_t begin(ShakeCallback_t cb);
+		//DieStatus_t attachShakeCallback(ShakeCallback_t cb);
+			
 		void roll(void);
 		void roll(int nrShakes);
 		void show(DieValue_t value);
-	
-		DieStatus_t detectShake(void);
-		void readADXL335(void);
+		bool isShaking();
+		
 		void setSensitivity(float s);
 		float getSensitivity();
-	
-		DieStatus_t attachShakeCallback(ShakeCallback_t cb);
-		bool rolling;
-	
+
+		DieStatus_t detectShake(void);
+		void readADXL335(void);
+
 	private:
+		DieStatus_t init(ShakeCallback_t cb);
 		void pinsInit(void);
 		void timerOneInit(void);
 		CircBufferStatus_t initBuffers(uint8_t size);

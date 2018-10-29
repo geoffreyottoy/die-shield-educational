@@ -72,14 +72,13 @@ void setup(){
   attachInterrupt(digitalPinToInterrupt(BUTTON_S1), s1Pressed, FALLING);
   
   // Initialize Die Shield for callback-based operation
-  Die.attachShakeCallback(&iAmShaking);
-  Die.begin();
+  Die.begin(&iAmShaking);
 }
 
 void loop(){
   // take time stamp
   unsigned long shakeTime = millis();
-
+  
   // shake event has been called
   if(dieShaking){
     if(shakeCounter==0){ // first shake (of the roll cylce)
@@ -94,14 +93,14 @@ void loop(){
     }
     // count the number of shakes
     shakeCounter++;
-
+    
     // store the time of this shake
     prevShakeTime = shakeTime;
     
     // store the time of this shake
     dieShaking = false;
   }
-
+  
   // roll cycle has started
   if(newRoll){
     // detect if shaking has stopped (die is released)
@@ -117,13 +116,13 @@ void loop(){
       dieRolling = false;
     }
   }
-
+  
   // button has been pressed (start roll animation without shaking)
   if(buttonPressed){
-     // start roll animation
+    // start roll animation
     Die.roll(10);
     // button press has been handled
     buttonPressed = false;
   }
-  
+
 }

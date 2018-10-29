@@ -47,12 +47,12 @@
 #define MAX_BUF_SIZE 128
 
 typedef enum circBufferStatuses{
-    CB_SUCCESS,
+	CB_SUCCESS,
 	CB_EMPTY,
 	CB_NOT_INITIALIZED,
 	CB_NOT_NULL,
 	CB_ARG_NULL,
-    CB_ERROR
+	CB_ERROR
 } CircBufferStatus_t;
 
 class CircBuffer{
@@ -72,7 +72,6 @@ class CircBuffer{
 		uint8_t tail;
 		uint8_t length;
 		uint8_t fill;
-		float sum;
 		float avg;
 };
 

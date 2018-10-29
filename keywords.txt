@@ -14,8 +14,7 @@ Die			KEYWORD1
 begin		KEYWORD2
 show		KEYWORD2
 roll		KEYWORD2
-attachShakeCallback	KEYWORD2
-detectShake	KEYWORD2
+isShaking	KEYWORD2
 setSensitivity	KEYWORD2
 getSensitivity	KEYWORD2
 

@@ -82,14 +82,13 @@ ISR(TIMER1_COMPA_vect){
 	sampleCtr++;
 	Die.readADXL335();
 	
+	///TODO: include callback
+	
 	// Detect Shake
 	if(sampleCtr==BUFFER_SIZE){
 		sampleCtr=0;
 		if(Die.detectShake() == DS_SHAKING){
 			shaking = true;
-			if(scb != NULL){
-				scb();
-			}
 		}
 		else{
 			shaking = false;
@@ -121,9 +120,8 @@ DieStatus_t DieShield::begin(){
 
 /* Begin operation of the die and assign a shake callback.
  */
-DieStatus_t DieShield::begin(ShakeCallback_t cb){
-	return this->init(cb);
-}
+ /// TODO: overload begin() method to pass ShakeCallback_t to init()
+
 
 /* Return if a shake has been detected. 
  */
@@ -176,7 +174,7 @@ void DieShield::roll(int nrShakes){
 /* Show a value on the LEDs of the die shield.
  */
 void DieShield::show(DieValue_t value){
-	// TODO: display value using the shield's LEDs
+	/// TODO: display value using the shield's LEDs
 }
 
 /* Detect a shake
@@ -243,13 +241,12 @@ DieStatus_t DieShield::init(ShakeCallback_t cb){
 	}
 	dsInitialized = true;
 	
+	/// TODO:
 	// Attach callback
-	// check if callback has not been set previously
-	if(scb != NULL){
-		return DS_NOT_NULL;
-	}
-	// set callback
-	scb = cb;
+		// check if callback has not been set previously
+
+		// set callback
+		
 	
 	// Initialize attributes
 	sampleCtr=0;
@@ -259,12 +256,15 @@ DieStatus_t DieShield::init(ShakeCallback_t cb){
 	
 	// Initialize random generator
 	randomSeed(analogRead(A5));
+	
 	// Initialize measurement buffers
 	if(this->initBuffers(BUFFER_SIZE) != CB_SUCCESS){
 		return DS_INIT_ERROR;
 	}
+	
 	// Initialize pins
     this->pinsInit();
+	
 	// Initialize timer 1
 	this->timerOneInit();
 	
@@ -296,8 +296,10 @@ void DieShield::timerOneInit(){
 	TCCR1A = 0; // set entire TCCR1A register to 0
 	TCCR1B = 0; // same for TCCR1B
 	TCNT1  = 0; //initialize counter value to 0
-	// set compare match register for 200 Hz increments
-	OCR1A = 9999; // = ((16*10^6) / (200*8)) - 1 (must be <65536)
+	
+	/// TODO: set compare match register for 200 Hz increments
+	// OCR1A = (fclk / (200 * prescaler)) - 1 (must be <65536)
+	
 	// turn on CTC mode
 	TCCR1B |= (1 << WGM12);
 	// set CS11 bit for /8 prescaler

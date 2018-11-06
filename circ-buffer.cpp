@@ -109,9 +109,6 @@ CircBufferStatus_t CircBuffer::put(float data){
 	
 	// check if buffer is initalized
 	if(this->buffer != NULL){
-		// store last value (in case it gets "pushed out")
-		float lastValue = this->buffer[this->tail];
-
 		// store value at the head of the buffer
 		this->buffer[this->head] = data;
 		// move head

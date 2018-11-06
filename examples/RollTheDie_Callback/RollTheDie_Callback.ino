@@ -41,27 +41,27 @@
  
 #include "die-shield.h"
 
-#define ROLLING_TRESHOLD 500 // ms
+#define RELEASE_TRESHOLD 500 // ms
 
 #define BUTTON_S1 2 // D2 (INT0)
 
 bool buttonPressed = false;
-bool newRoll = false;
+bool newThrow = false;
 bool dieShaking = false;
-bool dieRolling = false;
+bool dieReleased = false;
 unsigned long prevShakeTime = 0;  
 unsigned int shakeCounter = 0;
 
 /* ISR for Button S1 */
 void s1Pressed(void){
-  if(!newRoll){ // ignore button press when roll cycle has started
+  if(!newThrow){ // ignore button press when roll cycle has started
     buttonPressed = true;
   }
 }
 
 /* Callback for the Die shake event */
 ShakeCallback_t iAmShaking(void){
-  if(!dieRolling){ // ignore shake when roll animation has started
+  if(!dieReleased){ // ignore shake when roll animation has started
     dieShaking = true;
   }
 }
@@ -71,8 +71,8 @@ void setup(){
   pinMode(BUTTON_S1, INPUT);
   attachInterrupt(digitalPinToInterrupt(BUTTON_S1), s1Pressed, FALLING);
   
-  // Initialize Die Shield for callback-based operation
-  Die.begin(&iAmShaking);
+  /// TODO: Initialize Die Shield for callback-based operation
+  Die.begin();
 }
 
 void loop(){
@@ -81,48 +81,17 @@ void loop(){
   
   // shake event has been called
   if(dieShaking){
-    if(shakeCounter==0){ // first shake (of the roll cylce)
-      // show a new value
-      Die.roll();
-    }
-    else{ // another shake
-      // start roll cycle
-      newRoll = true; 
-      // show a new value
-      Die.roll();
-    }
-    // count the number of shakes
-    shakeCounter++;
-    
-    // store the time of this shake
-    prevShakeTime = shakeTime;
-    
-    // store the time of this shake
-    dieShaking = false;
+    /// TODO: handle shake
   }
   
-  // roll cycle has started
-  if(newRoll){
-    // detect if shaking has stopped (die is released)
-    if(shakeTime-prevShakeTime > ROLLING_TRESHOLD){
-      // to ignore new shakes while die is rolling
-      dieRolling = true;
-      // start roll animation (the more shakes have been counted, the longer it will roll)
-      Die.roll(shakeCounter);
-      
-      // end roll cycle
-      shakeCounter = 0; 
-      newRoll = false;
-      dieRolling = false;
-    }
+  // throw cycle has started
+  if(newThrow){
+	/// TODO: new throw handling
   }
   
   // button has been pressed (start roll animation without shaking)
   if(buttonPressed){
-    // start roll animation
-    Die.roll(10);
-    // button press has been handled
-    buttonPressed = false;
+	/// TODO: (optionally) what happens when button is pressed
   }
 
 }
